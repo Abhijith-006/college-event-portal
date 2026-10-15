@@ -1,0 +1,184 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CampusConnect | College Event Portal</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f3f6fc;color:#172033}
+header{background:#172554;color:white;padding:22px 7%}
+header h1{margin:0 0 8px}
+nav a{color:white;text-decoration:none;margin-right:18px}
+main{max-width:1100px;margin:24px auto;padding:0 16px}
+.hero{background:linear-gradient(120deg,#2563eb,#6d28d9);color:white;padding:30px;border-radius:12px}
+section{background:white;padding:20px;margin:20px 0;border-radius:10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:15px}
+.card{border:1px solid #e2e8f0;padding:16px;border-radius:9px}
+.tag{color:#2563eb;font-weight:bold}
+input,select,textarea,button{padding:10px;border:1px solid #cbd5e1;border-radius:6px;margin:5px 0;width:100%}
+button{background:#2563eb;color:white;border:0;cursor:pointer}
+button:hover{background:#1d4ed8}
+label{display:block;margin-top:8px}
+footer{text-align:center;padding:20px;color:#64748b}
+</style>
+</head>
+<body>
+<header>
+<h1>CampusConnect</h1>
+<p>Your campus. Your events. Your community.</p>
+<nav>
+<a href="#events">Events</a>
+<a href="#register">Register</a>
+<a href="#status">My Registration</a>
+<a href="#faculty">Faculty Panel</a>
+</nav>
+</header>
+
+<main>
+<div class="hero">
+<h2>Discover What's Happening on Campus</h2>
+<p>Explore technical symposiums, hackathons, workshops and cultural festivals.</p>
+<button onclick="document.getElementById('events').scrollIntoView()">Explore Events</button>
+</div>
+
+<section>
+<h2>Campus Overview</h2>
+<div class="grid">
+<div class="card"><h3 id="eventCount">6</h3><p>Upcoming Events</p></div>
+<div class="card"><h3 id="registrationCount">0</h3><p>Registrations This Session</p></div>
+<div class="card"><h3>Open</h3><p>Student Registration</p></div>
+</div>
+</section>
+
+<section id="events">
+<h2>Upcoming College Events</h2>
+<input id="search" placeholder="Search events or venues..." oninput="renderEvents()">
+<select id="category" onchange="renderEvents()">
+<option value="All">All categories</option>
+<option>Technology</option>
+<option>Workshop</option>
+<option>Cultural</option>
+<option>Career</option>
+</select>
+<div class="grid" id="eventList"></div>
+</section>
+
+<section id="register">
+<h2>Student Registration</h2>
+<form id="registrationForm">
+<label>Full Name</label>
+<input id="studentName" required placeholder="Enter your name">
+<label>Registration Number</label>
+<input id="regNo" required placeholder="Enter registration number">
+<label>Email</label>
+<input id="email" type="email" required placeholder="Enter email">
+<label>Select Event</label>
+<select id="eventSelect" required></select>
+<button type="submit">Register for Event</button>
+</form>
+<p id="registrationMessage"></p>
+</section>
+
+<section id="status">
+<h2>Check Registration Status</h2>
+<input id="registrationId" placeholder="Enter your registration ID">
+<button onclick="checkStatus()">Check Status</button>
+<p id="statusResult">Your registration status will appear here.</p>
+</section>
+
+<section id="faculty">
+<h2>Faculty Coordinator Panel</h2>
+<p class="tag">Create and manage campus events</p>
+<form id="eventForm">
+<label>Event Title</label>
+<input id="newTitle" required placeholder="Event name">
+<label>Category</label>
+<select id="newCategory">
+<option>Technology</option>
+<option>Workshop</option>
+<option>Cultural</option>
+<option>Career</option>
+</select>
+<label>Date</label>
+<input id="newDate" type="date" required>
+<label>Time</label>
+<input id="newTime" type="time" required>
+<label>Venue</label>
+<input id="newVenue" required placeholder="Event venue">
+<label>Participant Limit</label>
+<input id="newLimit" type="number" min="1" max="10000" value="100" required>
+<label>Description</label>
+<textarea id="newDescription" required placeholder="Event details"></textarea>
+<button type="submit">Create Event</button>
+</form>
+<p id="eventMessage"></p>
+<h3>Registration Monitor</h3>
+<div id="monitor"></div>
+</section>
+
+<section>
+<h2>Registration Instructions</h2>
+<ol>
+<li>Browse the events and choose an event.</li>
+<li>Enter your name, registration number and email.</li>
+<li>Save the registration ID displayed after registration.</li>
+<li>Use the registration ID to check your status.</li>
+</ol>
+</section>
+</main>
+<footer>CampusConnect | College Event Management Portal</footer>
+
+<script>
+let events=[
+{id:"EVT001",title:"TechFest Symposium",category:"Technology",date:"2026-11-10",time:"09:00",venue:"Main Auditorium",limit:150,description:"Technical talks, coding challenges and project showcases.",registered:0},
+{id:"EVT002",title:"CodeSprint Hackathon",category:"Technology",date:"2026-11-15",time:"10:00",venue:"Innovation Lab",limit:100,description:"Build creative software solutions with a team.",registered:0},
+{id:"EVT003",title:"Cloud Computing Workshop",category:"Workshop",date:"2026-11-18",time:"11:00",venue:"Lab Block A",limit:80,description:"Learn cloud fundamentals and deployment.",registered:0},
+{id:"EVT004",title:"Rhythm Cultural Fest",category:"Cultural",date:"2026-11-22",time:"16:00",venue:"Open Air Theatre",limit:300,description:"Music, dance and cultural performances.",registered:0},
+{id:"EVT005",title:"Career Development Workshop",category:"Career",date:"2026-11-25",time:"14:00",venue:"Seminar Hall",limit:100,description:"Resume writing and interview preparation.",registered:0},
+{id:"EVT006",title:"Robotics Challenge",category:"Technology",date:"2026-11-29",time:"09:30",venue:"Engineering Block",limit:75,description:"Explore robotics, automation and innovation.",registered:0}
+];
+let registrations=[];
+function renderEvents(){
+let term=document.getElementById("search").value.toLowerCase();
+let cat=document.getElementById("category").value;
+let filtered=events.filter(e=>(e.title+" "+e.venue+" "+e.description).toLowerCase().includes(term)&&(cat==="All"||e.category===cat));
+document.getElementById("eventList").innerHTML=filtered.map(e=>`<div class="card"><p class="tag">${e.category}</p><h3>${e.title}</h3><p>${e.description}</p><p><b>Date:</b> ${e.date} at ${e.time}</p><p><b>Venue:</b> ${e.venue}</p><p>Registered: ${e.registered}/${e.limit}</p><button onclick="chooseEvent('${e.id}')">Select Event</button></div>`).join("")||"<p>No matching events found.</p>";
+document.getElementById("eventSelect").innerHTML=events.map(e=>`<option value="${e.id}">${e.title} (${e.registered}/${e.limit})</option>`).join("");
+document.getElementById("eventCount").textContent=events.length;
+renderMonitor();
+}
+function chooseEvent(id){document.getElementById("eventSelect").value=id;document.getElementById("register").scrollIntoView();}
+document.getElementById("registrationForm").addEventListener("submit",function(e){
+e.preventDefault();
+let event=events.find(x=>x.id===document.getElementById("eventSelect").value);
+if(!event||event.registered>=event.limit){document.getElementById("registrationMessage").textContent="Registration is full for this event.";return;}
+let id="REG-"+Date.now().toString().slice(-8);
+event.registered++;
+registrations.push({id,name:document.getElementById("studentName").value,regNo:document.getElementById("regNo").value,email:document.getElementById("email").value,eventId:event.id,status:"Registered"});
+document.getElementById("registrationMessage").textContent="Registration successful! Your ID is "+id;
+document.getElementById("registrationCount").textContent=registrations.length;
+this.reset();renderEvents();
+});
+function checkStatus(){
+let id=document.getElementById("registrationId").value.trim().toLowerCase();
+let r=registrations.find(x=>x.id.toLowerCase()===id);
+let event=r&&events.find(x=>x.id===r.eventId);
+document.getElementById("statusResult").textContent=r?`${r.name} — ${event.title} — Status: ${r.status} — ID: ${r.id}`:"Registration not found in this session.";
+}
+document.getElementById("eventForm").addEventListener("submit",function(e){
+e.preventDefault();
+let limit=Number(document.getElementById("newLimit").value);
+if(!Number.isInteger(limit)||limit<1||limit>10000){document.getElementById("eventMessage").textContent="Participant limit must be between 1 and 10000.";return;}
+events.push({id:"EVT"+Date.now().toString().slice(-6),title:document.getElementById("newTitle").value,category:document.getElementById("newCategory").value,date:document.getElementById("newDate").value,time:document.getElementById("newTime").value,venue:document.getElementById("newVenue").value,limit,description:document.getElementById("newDescription").value,registered:0});
+document.getElementById("eventMessage").textContent="Event created successfully.";
+this.reset();renderEvents();
+});
+function renderMonitor(){
+document.getElementById("monitor").innerHTML=events.map(e=>`<p><b>${e.title}</b> — ${e.registered} registered / ${e.limit} capacity</p>`).join("");
+}
+renderEvents();
+</script>
+</body>
+</html>
